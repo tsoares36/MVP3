@@ -1,0 +1,8 @@
+*.xlsx
+*.csv
+*.exe
+*.zip
+/.vscode
+/__pycache__
+exame_final.txt
+/venv
