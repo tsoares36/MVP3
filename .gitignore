@@ -1,5 +1,5 @@
 *.xlsx
-*.csv
+Electric_Vehicle_Population_Data.csv
 *.exe
 *.zip
 /.vscode

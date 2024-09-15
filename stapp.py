@@ -23,9 +23,20 @@ st.markdown('---')
 
 ########################################################################################
 ############################ bases de dados ############################################
-df_electric_car = pd.read_csv(f'{bases}Electric_Vehicle_Population_Data.csv', sep=',')
-df_stocks = pd.read_csv(f'{bases}tesla_stock_data.csv')
 
+df0 = pd.read_csv(f'{bases}Electric_Vehicle_Population_Data_0.csv', sep=",")
+df1 = pd.read_csv(f'{bases}Electric_Vehicle_Population_Data_1.csv', sep=",")
+df2 = pd.read_csv(f'{bases}Electric_Vehicle_Population_Data_2.csv', sep=",")
+df3 = pd.read_csv(f'{bases}Electric_Vehicle_Population_Data_3.csv', sep=",")
+
+df1.columns = df0.columns
+df2.columns = df0.columns
+df3.columns = df0.columns
+
+df_electric_car = pd.concat([df0, df1, df2, df3], axis=0, ignore_index=True)
+
+# df_electric_car = pd.read_csv(f'{bases}Electric_Vehicle_Population_Data.csv', sep=',')
+df_stocks = pd.read_csv(f'{bases}tesla_stock_data.csv')
 
 df_electric_car = df_electric_car.drop(
     ['Postal Code', 'Clean Alternative Fuel Vehicle (CAFV) Eligibility', 'Legislative District', 'DOL Vehicle ID', 'Electric Utility', '2020 Census Tract'], axis = 1)
