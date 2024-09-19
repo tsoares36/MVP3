@@ -19,7 +19,6 @@ st.set_page_config(
     )
 
 st.subheader('Carros elétricos produzidos nos EUA')
-st.markdown('---')
 
 ########################################################################################
 ############################ bases de dados ############################################
@@ -100,10 +99,8 @@ def Home():
     qtdcarros = int(df_selection['Model'].count())
     percarros = round(qtdcarros/float(df_electric_car['Model'].count()), 2) * 100
 
-
     mostfrequent = df_selection["Model"].mode().iloc[0]
     
-    # print(df_electric_car[df_electric_car['Model'] == mostfrequent])
     percarromais = round(float(df_electric_car['Model'][df_electric_car['Model'] == mostfrequent].count()) / qtdcarros, 2) * 100
     
     val, val1 = st.columns(2, gap='large')
@@ -130,7 +127,7 @@ def exibir_grafico_carros_ano_a_ano(df):
     df_ano = df_ano.sort_values('Model Year')
     df_ano = df_ano[df_ano['Model Year'].isin(escopo_ampliado)]
 
-    # Criar um gráfico de barras interativo usando Plotly
+    # Criar um gráfico de barras interativo usando Plotly-
     fig = px.bar(
         df_ano,
         x='Model Year',
@@ -161,7 +158,6 @@ def exibir_grafico_carros_por_regiao(df):
     # Mesclando os DataFrames com base na coluna 'State'
     df_merged = pd.merge(df, df_coordinates, on='State', suffixes=('', '_new'))
 
-
     # Substituindo os valores de Latitude e Longitude
     df_merged['Latitude'] = df_merged['Latitude_new']
     df_merged['Longitude'] = df_merged['Longitude_new']
@@ -176,10 +172,77 @@ def exibir_grafico_carros_por_regiao(df):
     df_merged = df_merged.rename(columns={"Latitude": "lat", "Longitude":"lon"})
 
     df_grouped = df_merged.groupby(["lat", "lon"]).size().reset_index(name='quant')    
-    #df_grouped.drop(columns='quant', inplace=True)
-
-    st.write("Carros por estado americano")
+    
+    st.markdown('**Carros por estado americano**')
     st.map(df_grouped, size="quant", color='#0044ff')
+
+
+def exibir_grafico_vendas_projetadas(df):
+    # obter valores exclusivos para preço de venda sugerido
+    df_sugg_price = df_electric_car[['Model', 'Base MSRP']].drop_duplicates()
+
+    # preencher com a mediana dos valores
+    # Substituir valores 0 por NaN para calcular a mediana corretamente
+    df_sugg_price['Base MSRP'].replace(0.0, np.nan, inplace=True)
+
+    # Calcular a mediana dos valores não nulos
+    median_price = df_sugg_price['Base MSRP'].median()
+
+    # Preencher os valores NaN com a mediana
+    df_sugg_price['Base MSRP'] = df_sugg_price['Base MSRP'].fillna(median_price)
+
+    df_ = pd.merge(df, df_sugg_price, on='Model', how='left', suffixes=('', '_y'))
+    df_ = df_.dropna()
+    df_ = df_.loc[:,~df_.columns.duplicated()]
+    df_ = df_.drop(columns=['Base MSRP'])
+    df_ = df_.rename(columns={'Base MSRP_y': 'Base MSRP'})
+
+    # Agrupar e calcular as vendas por ano
+    tesla_car_sells_by_year = df_.groupby('Model Year')['Base MSRP'].sum()
+    
+    tesla_car_sells_by_year_millions = tesla_car_sells_by_year / 1e6
+
+    escopo_ampliado = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
+   
+    # Filtrar os anos no DataFrame com base no escopo ampliado
+    tesla_car_sells_by_year_millions = tesla_car_sells_by_year_millions.reindex(escopo_ampliado, fill_value=0)
+
+    # Gerar o gráfico usando Plotly Express
+    fig = px.bar(
+        tesla_car_sells_by_year_millions,
+        x=tesla_car_sells_by_year_millions.index,
+        y=tesla_car_sells_by_year_millions.values,
+        labels={'x': 'Ano', 'y': 'Vendas (em milhões)'},
+        title='Vendas Projetadas por Ano (em milhões de dólares)',
+    )
+
+    # Exibir o gráfico no Streamlit
+    st.plotly_chart(fig)
+
+    return df_
+
+
+def vendas_projetadas_por_modelo(df_):
+    tesla_car_sells_by_year = df_.groupby('Model')['Base MSRP'].sum()
+    print(df_.columns)
+    tesla_car_sells_by_year_millions = tesla_car_sells_by_year / 1e6
+
+    carros = df_['Model'].drop_duplicates().to_list()
+   
+    # Filtrar os anos no DataFrame com base no escopo ampliado
+    tesla_car_sells_by_year_millions = tesla_car_sells_by_year_millions.reindex(carros, fill_value=0)
+
+    # Gerar o gráfico usando Plotly Express
+    fig = px.bar(
+        tesla_car_sells_by_year_millions,
+        x=tesla_car_sells_by_year_millions.index,
+        y=tesla_car_sells_by_year_millions.values,
+        labels={'x': 'Ano', 'y': 'Vendas (em milhões)'},
+        title='Vendas Projetadas por Ano, por modelo de carro (em milhões de dólares)',
+    )
+
+    # Exibir o gráfico no Streamlit
+    st.plotly_chart(fig)
 
 
 def exibir_grafico_acoes_e_carros(df):
@@ -211,7 +274,11 @@ def exibir_grafico_acoes_e_carros(df):
     # Ajustando o layout para dois eixos y
     fig.update_layout(
         title='Produção de Carros e Preço das Ações da Tesla',
-        xaxis=dict(title='Ano'),
+        xaxis=dict(
+            title='Ano',
+            tickmode='linear',
+            dtick=1
+            ),
         yaxis=dict(
             title='Quantidade de Carros Produzidos',
             titlefont=dict(color='blue'),
@@ -231,15 +298,17 @@ def exibir_grafico_acoes_e_carros(df):
     st.plotly_chart(fig)
 
 
-# chamando funções
+# chamando as funções
 Home()
 exibir_grafico_carros_ano_a_ano(df_selection)
 st.markdown('---')
 exibir_grafico_carros_por_regiao(df_selection)
 st.markdown('---')
+df = exibir_grafico_vendas_projetadas(df_selection)
+st.markdown('---')
+vendas_projetadas_por_modelo(df)
 
-st.write("Quantidade de carros produzidos x Preço das ações da Tesla entre 2020 e 2023")
-if "TESLA" in company and len(company) == 1:
+if "TESLA" in company and len(company) == 1:    
     exibir_grafico_acoes_e_carros(df_stocks_and_cars)
 
 else:
