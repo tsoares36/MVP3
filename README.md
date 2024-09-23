@@ -1,0 +1,2 @@
+Este notebook demonstra a análise exploratória de dados de carros fabricados nos Estados Unidos, no período de 2020 a 2023, pela Tesla, em comparação com as ações desta companhia, no mesmo período.
+Também foi realizado um modelo simples de regressão linear comparando os dados. E, adicionalmente, um aplicativo utilizando uma biblioteca bem conhecida para Ciência de Dados, o Streamlit. Essa biblioteca permite criar gráficos dinâmicos que se ajustam conforme os filtros escolhidos. 
